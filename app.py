@@ -1,137 +1,255 @@
 import streamlit as st
 import google.generativeai as genai
 import os
+from pypdf import PdfReader
+from duckduckgo_search import DDGS
 
 # =========================
-# PAGE CONFIG
+# CONFIG
 # =========================
+
 st.set_page_config(
-    page_title="AI Internship Finder",
-    page_icon="..",
+    page_title="AI Intern MVP",
+    page_icon="🤖",
     layout="wide"
 )
 
-# =========================
-# GEMINI CONFIGURATION
-# =========================
 api_key = os.getenv("GEMINI_API_KEY")
 
-if api_key:
-    genai.configure(api_key=api_key)
+if not api_key:
+    st.error("GEMINI_API_KEY not configured")
+    st.stop()
+
+genai.configure(api_key=api_key)
+
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 # =========================
-# HEADER
+# MEMORY
 # =========================
-st.title(" AI Internship Finder")
-st.markdown("### Find suitable internships, get recruiter emails, resume summaries, and a learning roadmap.")
 
-st.markdown("---")
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
 # =========================
-# USER INPUTS
+# SIDEBAR
 # =========================
-name = st.text_input("Full Name")
 
-degree = st.selectbox(
-    "Degree",
+st.sidebar.title("🤖 AI Intern")
+
+feature = st.sidebar.selectbox(
+    "Choose Feature",
     [
-        "BCA",
-        "B.Tech",
-        "B.Sc",
-        "MCA",
-        "M.Tech",
-        "Other"
-    ]
-)
-
-skills = st.text_area(
-    "Skills",
-    placeholder="Python, Java, HTML, CSS, JavaScript, SQL, AI, Machine Learning"
-)
-
-location = st.text_input(
-    "Preferred Location",
-    placeholder="Noida, Gurgaon, Delhi, Remote"
-)
-
-experience = st.selectbox(
-    " Experience Level",
-    [
-        "Fresher",
-        "Beginner",
-        "Intermediate"
-    ]
-)
-
-career_interest = st.selectbox(
-    " Career Interest",
-    [
-        "Software Development",
-        "Web Development",
-        "Data Science",
-        "Artificial Intelligence",
-        "Cyber Security",
-        "Cloud Computing",
-        "Mobile App Development"
+        "Chat",
+        "Content Drafting",
+        "Summarization",
+        "Task Extraction",
+        "PDF Q&A",
+        "Web Search"
     ]
 )
 
 # =========================
-# BUTTON
+# TITLE
 # =========================
-if st.button(" Analyze My Profile"):
 
-    if not api_key:
-        st.error("GEMINI_API_KEY is not configured.")
-    elif not skills:
-        st.warning("Please enter your skills.")
-    else:
+st.title("🤖 AI Intern MVP")
+
+# =========================
+# CHAT
+# =========================
+
+if feature == "Chat":
+
+    user_input = st.text_area("Ask Anything")
+
+    if st.button("Send"):
 
         prompt = f"""
-        You are an expert career counselor.
+        Chat History:
+        {st.session_state.chat_history}
 
-        Candidate Details:
-
-        Name: {name}
-        Degree: {degree}
-        Skills: {skills}
-        Preferred Location: {location}
-        Experience Level: {experience}
-        Career Interest: {career_interest}
-
-        Generate a professional report with the following sections:
-
-        1. Profile Analysis
-
-        2. Top 10 Recommended Internship Roles
-
-        3. Missing Skills To Learn
-
-        4. Personalized Recruiter Cold Email
-
-        5. Professional Resume Summary
-
-        6. 30-Day Learning Roadmap
-
-        7. Career Advice
-
-        Use headings and bullet points.
+        User:
+        {user_input}
         """
 
-        try:
-            model = genai.GenerativeModel("gemini-1.5-flash")
+        response = model.generate_content(prompt)
+
+        st.session_state.chat_history.append(
+            {"user": user_input}
+        )
+
+        st.session_state.chat_history.append(
+            {"assistant": response.text}
+        )
+
+        st.markdown(response.text)
+
+# =========================
+# CONTENT DRAFTING
+# =========================
+
+elif feature == "Content Drafting":
+
+    draft_prompt = st.text_area(
+        "What do you want drafted?"
+    )
+
+    if st.button("Generate Draft"):
+
+        prompt = f"""
+        Create professional content.
+
+        Request:
+        {draft_prompt}
+        """
+
+        response = model.generate_content(prompt)
+
+        st.markdown(response.text)
+
+# =========================
+# SUMMARIZATION
+# =========================
+
+elif feature == "Summarization":
+
+    text = st.text_area(
+        "Paste Long Text"
+    )
+
+    if st.button("Summarize"):
+
+        prompt = f"""
+        Summarize this text.
+
+        {text}
+        """
+
+        response = model.generate_content(prompt)
+
+        st.markdown(response.text)
+
+# =========================
+# TASK EXTRACTION
+# =========================
+
+elif feature == "Task Extraction":
+
+    text = st.text_area(
+        "Paste Meeting Notes"
+    )
+
+    if st.button("Extract Tasks"):
+
+        prompt = f"""
+        Extract actionable tasks.
+
+        Give:
+
+        - Task
+        - Priority
+        - Deadline if found
+
+        Text:
+        {text}
+        """
+
+        response = model.generate_content(prompt)
+
+        st.markdown(response.text)
+
+# =========================
+# PDF Q&A
+# =========================
+
+elif feature == "PDF Q&A":
+
+    uploaded_file = st.file_uploader(
+        "Upload PDF",
+        type="pdf"
+    )
+
+    question = st.text_input(
+        "Ask Question"
+    )
+
+    if uploaded_file:
+
+        pdf = PdfReader(uploaded_file)
+
+        text = ""
+
+        for page in pdf.pages:
+            extracted = page.extract_text()
+
+            if extracted:
+                text += extracted
+
+        st.success("PDF Loaded")
+
+        if st.button("Answer Question"):
+
+            prompt = f"""
+            Answer ONLY from this document.
+
+            Document:
+            {text[:15000]}
+
+            Question:
+            {question}
+            """
 
             response = model.generate_content(prompt)
 
-            st.success("Analysis Generated Successfully!")
-
             st.markdown(response.text)
 
-        except Exception as e:
-            st.error(f"Error: {e}")
+# =========================
+# WEB SEARCH
+# =========================
 
-# =========================
-# FOOTER
-# =========================
-st.markdown("---")
-st.caption("Built with Python, Streamlit, and Gemini AI")
+elif feature == "Web Search":
+
+    query = st.text_input(
+        "Search Internet"
+    )
+
+    if st.button("Search"):
+
+        with DDGS() as ddgs:
+            results = list(
+                ddgs.text(
+                    query,
+                    max_results=5
+                )
+            )
+
+        context = ""
+
+        for r in results:
+            context += (
+                r["title"] + "\n" +
+                r["body"] + "\n\n"
+            )
+
+        prompt = f"""
+        Use these search results.
+
+        {context}
+
+        Give concise answer.
+        """
+
+        response = model.generate_content(prompt)
+
+        st.markdown(response.text)
+
+        with st.expander("Sources"):
+
+            for r in results:
+
+                st.write(r["title"])
+
+                st.write(r["href"])
+
+                st.divider()
