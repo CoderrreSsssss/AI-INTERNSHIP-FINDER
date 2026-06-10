@@ -30,7 +30,7 @@ st.markdown("---")
 # =========================
 # USER INPUTS
 # =========================
-name = st.text_input("👤 Full Name")
+name = st.text_input("Full Name")
 
 degree = st.selectbox(
     "Degree",
@@ -45,7 +45,7 @@ degree = st.selectbox(
 )
 
 skills = st.text_area(
-    "💻 Skills",
+    "Skills",
     placeholder="Python, Java, HTML, CSS, JavaScript, SQL, AI, Machine Learning"
 )
 
