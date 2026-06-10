@@ -7,7 +7,7 @@ import os
 # =========================
 st.set_page_config(
     page_title="AI Internship Finder",
-    page_icon="🚀",
+    page_icon="..",
     layout="wide"
 )
 
@@ -22,7 +22,7 @@ if api_key:
 # =========================
 # HEADER
 # =========================
-st.title("🚀 AI Internship Finder")
+st.title(" AI Internship Finder")
 st.markdown("### Find suitable internships, get recruiter emails, resume summaries, and a learning roadmap.")
 
 st.markdown("---")
@@ -33,7 +33,7 @@ st.markdown("---")
 name = st.text_input("👤 Full Name")
 
 degree = st.selectbox(
-    "🎓 Degree",
+    "Degree",
     [
         "BCA",
         "B.Tech",
@@ -50,12 +50,12 @@ skills = st.text_area(
 )
 
 location = st.text_input(
-    "📍 Preferred Location",
+    "Preferred Location",
     placeholder="Noida, Gurgaon, Delhi, Remote"
 )
 
 experience = st.selectbox(
-    "📈 Experience Level",
+    " Experience Level",
     [
         "Fresher",
         "Beginner",
@@ -64,7 +64,7 @@ experience = st.selectbox(
 )
 
 career_interest = st.selectbox(
-    "🎯 Career Interest",
+    " Career Interest",
     [
         "Software Development",
         "Web Development",
@@ -79,7 +79,7 @@ career_interest = st.selectbox(
 # =========================
 # BUTTON
 # =========================
-if st.button("🚀 Analyze My Profile"):
+if st.button(" Analyze My Profile"):
 
     if not api_key:
         st.error("GEMINI_API_KEY is not configured.")
