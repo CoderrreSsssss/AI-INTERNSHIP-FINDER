@@ -1,78 +1,121 @@
 import streamlit as st
 import google.generativeai as genai
+import os
 
-# Configure Page
+# =========================
+# PAGE CONFIG
+# =========================
 st.set_page_config(
     page_title="AI Internship Finder",
     page_icon="🚀",
     layout="wide"
 )
 
-# Header
-st.title("🚀 AI Internship Finder")
-st.subheader("Get Internship Recommendations, Cold Emails & Learning Roadmap")
-
-# Sidebar
-st.sidebar.title("Settings")
-
-api_key = st.sidebar.text_input(
-    "Enter Gemini API Key",
-    type="password"
-)
+# =========================
+# GEMINI CONFIGURATION
+# =========================
+api_key = os.getenv("GEMINI_API_KEY")
 
 if api_key:
     genai.configure(api_key=api_key)
 
-# User Inputs
-name = st.text_input("Your Name")
+# =========================
+# HEADER
+# =========================
+st.title("🚀 AI Internship Finder")
+st.markdown("### Find suitable internships, get recruiter emails, resume summaries, and a learning roadmap.")
+
+st.markdown("---")
+
+# =========================
+# USER INPUTS
+# =========================
+name = st.text_input("👤 Full Name")
 
 degree = st.selectbox(
-    "Degree",
-    ["BCA", "B.Tech", "B.Sc", "MCA", "M.Tech"]
+    "🎓 Degree",
+    [
+        "BCA",
+        "B.Tech",
+        "B.Sc",
+        "MCA",
+        "M.Tech",
+        "Other"
+    ]
 )
 
 skills = st.text_area(
-    "Enter Your Skills",
-    placeholder="Python, HTML, CSS, JavaScript, SQL"
+    "💻 Skills",
+    placeholder="Python, Java, HTML, CSS, JavaScript, SQL, AI, Machine Learning"
 )
 
 location = st.text_input(
-    "Preferred Location",
-    placeholder="Noida, Gurgaon, Remote"
+    "📍 Preferred Location",
+    placeholder="Noida, Gurgaon, Delhi, Remote"
 )
 
 experience = st.selectbox(
-    "Experience Level",
-    ["Fresher", "Beginner", "Intermediate"]
+    "📈 Experience Level",
+    [
+        "Fresher",
+        "Beginner",
+        "Intermediate"
+    ]
 )
 
-if st.button("Find My Internship 🚀"):
+career_interest = st.selectbox(
+    "🎯 Career Interest",
+    [
+        "Software Development",
+        "Web Development",
+        "Data Science",
+        "Artificial Intelligence",
+        "Cyber Security",
+        "Cloud Computing",
+        "Mobile App Development"
+    ]
+)
+
+# =========================
+# BUTTON
+# =========================
+if st.button("🚀 Analyze My Profile"):
 
     if not api_key:
-        st.error("Please enter Gemini API Key")
+        st.error("GEMINI_API_KEY is not configured.")
+    elif not skills:
+        st.warning("Please enter your skills.")
     else:
 
         prompt = f"""
-        User Details:
+        You are an expert career counselor.
+
+        Candidate Details:
 
         Name: {name}
         Degree: {degree}
         Skills: {skills}
         Preferred Location: {location}
-        Experience: {experience}
+        Experience Level: {experience}
+        Career Interest: {career_interest}
 
-        Act as a professional Career Counselor.
+        Generate a professional report with the following sections:
 
-        Provide:
+        1. Profile Analysis
 
-        1. Top 10 internship roles.
-        2. Skills missing.
-        3. Personalized recruiter cold email.
-        4. 30-day roadmap.
-        5. Resume summary.
-        6. Career advice.
+        2. Top 10 Recommended Internship Roles
 
-        Format beautifully.
+        3. Missing Skills To Learn
+
+        4. Personalized Recruiter Cold Email
+
+        5. Professional Resume Summary
+
+        6. 30-Day Learning Roadmap
+
+        7. Career Advice
+
+        Use headings and bullet points.
         """
 
         try:
@@ -80,15 +123,15 @@ if st.button("Find My Internship 🚀"):
 
             response = model.generate_content(prompt)
 
-            st.success("Analysis Completed")
+            st.success("Analysis Generated Successfully!")
 
             st.markdown(response.text)
 
         except Exception as e:
             st.error(f"Error: {e}")
 
-# Footer
+# =========================
+# FOOTER
+# =========================
 st.markdown("---")
-st.markdown(
-    "Made with ❤️ using Streamlit & Gemini AI"
-)
+st.caption("Built with Python, Streamlit, and Gemini AI")
