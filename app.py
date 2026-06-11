@@ -2,254 +2,256 @@ import streamlit as st
 import google.generativeai as genai
 import os
 from pypdf import PdfReader
-from duckduckgo_search import DDGS
 
-# =========================
-# CONFIG
-# =========================
-
+# --------------------
+# PAGE CONFIG
+# --------------------
 st.set_page_config(
-    page_title="AI Intern MVP",
+    page_title="AI Intern Pro",
     page_icon="🤖",
     layout="wide"
 )
 
+# --------------------
+# CUSTOM CSS
+# --------------------
+st.markdown("""
+<style>
+
+.stApp {
+    background: linear-gradient(135deg, #141E30, #243B55);
+}
+
+h1, h2, h3 {
+    color: #00E5FF;
+}
+
+.stButton > button {
+    background-color: #00E5FF;
+    color: black;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+div[data-testid="stMetric"] {
+    background-color: rgba(255,255,255,0.08);
+    padding: 15px;
+    border-radius: 10px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# --------------------
+# GEMINI API
+# --------------------
+
+# For local testing use:
+# api_key = "YOUR_GEMINI_API_KEY"
+
 api_key = os.getenv("GEMINI_API_KEY")
 
 if not api_key:
-    st.error("GEMINI_API_KEY not configured")
+    st.warning("Please configure GEMINI_API_KEY")
     st.stop()
 
 genai.configure(api_key=api_key)
 
 model = genai.GenerativeModel("gemini-1.5-flash")
 
-# =========================
-# MEMORY
-# =========================
+# --------------------
+# HEADER
+# --------------------
 
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
+st.title("🤖 AI Intern Pro")
+st.subheader("Your Personal AI Assistant")
 
-# =========================
+st.markdown("---")
+
+# --------------------
+# METRICS
+# --------------------
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.metric("Features", "6")
+
+with col2:
+    st.metric("AI Model", "Gemini")
+
+with col3:
+    st.metric("Version", "1.0")
+
+# --------------------
 # SIDEBAR
-# =========================
-
-st.sidebar.title("🤖 AI Intern")
+# --------------------
 
 feature = st.sidebar.selectbox(
     "Choose Feature",
     [
-        "Chat",
+        "AI Chat",
         "Content Drafting",
         "Summarization",
         "Task Extraction",
-        "PDF Q&A",
-        "Web Search"
+        "PDF Q&A"
     ]
 )
 
-# =========================
-# TITLE
-# =========================
+# --------------------
+# AI CHAT
+# --------------------
 
-st.title("🤖 AI Intern MVP")
+if feature == "AI Chat":
 
-# =========================
-# CHAT
-# =========================
+    st.header("💬 AI Chat")
 
-if feature == "Chat":
-
-    user_input = st.text_area("Ask Anything")
+    user_query = st.text_area(
+        "Ask anything"
+    )
 
     if st.button("Send"):
 
-        prompt = f"""
-        Chat History:
-        {st.session_state.chat_history}
-
-        User:
-        {user_input}
-        """
-
-        response = model.generate_content(prompt)
-
-        st.session_state.chat_history.append(
-            {"user": user_input}
-        )
-
-        st.session_state.chat_history.append(
-            {"assistant": response.text}
+        response = model.generate_content(
+            user_query
         )
 
         st.markdown(response.text)
 
-# =========================
+# --------------------
 # CONTENT DRAFTING
-# =========================
+# --------------------
 
 elif feature == "Content Drafting":
 
-    draft_prompt = st.text_area(
-        "What do you want drafted?"
+    st.header("📝 Content Drafting")
+
+    prompt = st.text_area(
+        "Describe what you want"
     )
 
     if st.button("Generate Draft"):
 
-        prompt = f"""
-        Create professional content.
+        response = model.generate_content(
+            f"""
+            Write professional content for:
 
-        Request:
-        {draft_prompt}
-        """
-
-        response = model.generate_content(prompt)
+            {prompt}
+            """
+        )
 
         st.markdown(response.text)
 
-# =========================
+# --------------------
 # SUMMARIZATION
-# =========================
+# --------------------
 
 elif feature == "Summarization":
 
-    text = st.text_area(
-        "Paste Long Text"
+    st.header("📄 Summarizer")
+
+    long_text = st.text_area(
+        "Paste text here"
     )
 
     if st.button("Summarize"):
 
-        prompt = f"""
-        Summarize this text.
+        response = model.generate_content(
+            f"""
+            Summarize this:
 
-        {text}
-        """
-
-        response = model.generate_content(prompt)
+            {long_text}
+            """
+        )
 
         st.markdown(response.text)
 
-# =========================
+# --------------------
 # TASK EXTRACTION
-# =========================
+# --------------------
 
 elif feature == "Task Extraction":
 
-    text = st.text_area(
-        "Paste Meeting Notes"
+    st.header("✅ Task Extractor")
+
+    meeting_notes = st.text_area(
+        "Paste meeting notes"
     )
 
     if st.button("Extract Tasks"):
 
-        prompt = f"""
-        Extract actionable tasks.
+        response = model.generate_content(
+            f"""
+            Extract tasks.
 
-        Give:
+            Give:
+            - Task
+            - Priority
+            - Deadline
 
-        - Task
-        - Priority
-        - Deadline if found
+            Notes:
 
-        Text:
-        {text}
-        """
-
-        response = model.generate_content(prompt)
+            {meeting_notes}
+            """
+        )
 
         st.markdown(response.text)
 
-# =========================
+# --------------------
 # PDF Q&A
-# =========================
+# --------------------
 
 elif feature == "PDF Q&A":
 
-    uploaded_file = st.file_uploader(
+    st.header("📚 PDF Question Answering")
+
+    uploaded_pdf = st.file_uploader(
         "Upload PDF",
-        type="pdf"
+        type=["pdf"]
     )
 
     question = st.text_input(
         "Ask Question"
     )
 
-    if uploaded_file:
+    if uploaded_pdf:
 
-        pdf = PdfReader(uploaded_file)
+        reader = PdfReader(uploaded_pdf)
 
-        text = ""
+        pdf_text = ""
 
-        for page in pdf.pages:
-            extracted = page.extract_text()
+        for page in reader.pages:
 
-            if extracted:
-                text += extracted
+            page_text = page.extract_text()
 
-        st.success("PDF Loaded")
+            if page_text:
+                pdf_text += page_text
+
+        st.success("PDF Loaded Successfully")
 
         if st.button("Answer Question"):
 
             prompt = f"""
-            Answer ONLY from this document.
+            Answer ONLY from the document.
 
-            Document:
-            {text[:15000]}
+            DOCUMENT:
 
-            Question:
+            {pdf_text[:15000]}
+
+            QUESTION:
+
             {question}
             """
 
-            response = model.generate_content(prompt)
+            response = model.generate_content(
+                prompt
+            )
 
             st.markdown(response.text)
 
-# =========================
-# WEB SEARCH
-# =========================
+# --------------------
+# FOOTER
+# --------------------
 
-elif feature == "Web Search":
-
-    query = st.text_input(
-        "Search Internet"
-    )
-
-    if st.button("Search"):
-
-        with DDGS() as ddgs:
-            results = list(
-                ddgs.text(
-                    query,
-                    max_results=5
-                )
-            )
-
-        context = ""
-
-        for r in results:
-            context += (
-                r["title"] + "\n" +
-                r["body"] + "\n\n"
-            )
-
-        prompt = f"""
-        Use these search results.
-
-        {context}
-
-        Give concise answer.
-        """
-
-        response = model.generate_content(prompt)
-
-        st.markdown(response.text)
-
-        with st.expander("Sources"):
-
-            for r in results:
-
-                st.write(r["title"])
-
-                st.write(r["href"])
-
-                st.divider()
+st.markdown("---")
+st.caption("🚀 Built using Streamlit + Gemini AI")
