@@ -49,7 +49,7 @@ div[data-testid="stMetric"] {
 # For local testing use:
 # api_key = "YOUR_GEMINI_API_KEY"
 
-api_key = os.getenv("GEMINI_API_KEY")
+api_key = os.getenv("AQ.Ab8RN6KRnnVqBMGbrKZUPUH3iTzIfnGM4gIKMs1WVS8EuHfifw")
 
 if not api_key:
     st.warning("Please configure GEMINI_API_KEY")
